@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberPunk Clock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-black': '#0D0221',
+                        'cyber-purple': '#9D4EDD',
+                        'cyber-pink': '#FF2E63',
+                        'cyber-blue': '#08D9D6',
+                        'cyber-yellow': '#EAEAEA',
+                    },
+                    fontFamily: {
+                        'cyber': ['Orbitron', 'sans-serif', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .text-shadow-neon-purple {
+                text-shadow: 0 0 5px #9D4EDD, 0 0 10px #9D4EDD, 0 0 20px #9D4EDD;
+            }
+            .text-shadow-neon-pink {
+                text-shadow: 0 0 5px #FF2E63, 0 0 10px #FF2E63, 0 0 20px #FF2E63;
+            }
+            .text-shadow-neon-blue {
+                text-shadow: 0 0 5px #08D9D6, 0 0 10px #08D9D6, 0 0 20px #08D9D6;
+            }
+            .glow-neon-purple {
+                box-shadow: 0 0 5px #9D4EDD, 0 0 10px #9D4EDD, 0 0 20px #9D4EDD;
+            }
+            .glow-neon-pink {
+                box-shadow: 0 0 5px #FF2E63, 0 0 10px #FF2E63, 0 0 20px #FF2E63;
+            }
+            .glow-neon-blue {
+                box-shadow: 0 0 5px #08D9D6, 0 0 10px #08D9D6, 0 0 20px #08D9D6;
+            }
+            .grid-pattern {
+                background-image: linear-gradient(rgba(8, 217, 214, 0.1) 1px, transparent 1px),
+                                linear-gradient(90deg, rgba(8, 217, 214, 0.1) 1px, transparent 1px);
+                background-size: 20px 20px;
+            }
+            .scanline {
+                background: linear-gradient(to bottom, 
+                    rgba(255,255,255,0) 0%,
+                    rgba(255,255,255,0.05) 50%,
+                    rgba(255,255,255,0) 100%);
+                position: absolute;
+                width: 100%;
+                height: 5px;
+                animation: scanline 6s linear infinite;
+            }
+            @keyframes scanline {
+                0% { top: -100%; }
+                100% { top: 100%; }
+            }
+            .glitch {
+                position: relative;
+            }
+            .glitch::before, .glitch::after {
+                content: attr(data-text);
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+            .glitch::before {
+                left: 2px;
+                text-shadow: -1px 0 #FF2E63;
+                clip: rect(24px, 550px, 90px, 0);
+                animation: glitch-anim 5s infinite linear alternate-reverse;
+            }
+            .glitch::after {
+                left: -2px;
+                text-shadow: -1px 0 #08D9D6;
+                clip: rect(85px, 550px, 140px, 0);
+                animation: glitch-anim 5s infinite linear alternate-reverse;
+                animation-delay: 0.3s;
+            }
+            @keyframes glitch-anim {
+                0% { clip: rect(42px, 9999px, 44px, 0); }
+                5% { clip: rect(12px, 9999px, 59px, 0); }
+                10% { clip: rect(48px, 9999px, 29px, 0); }
+                15% { clip: rect(42px, 9999px, 73px, 0); }
+                20% { clip: rect(63px, 9999px, 27px, 0); }
+                25% { clip: rect(34px, 9999px, 55px, 0); }
+                30% { clip: rect(86px, 9999px, 73px, 0); }
+                35% { clip: rect(20px, 9999px, 20px, 0); }
+                40% { clip: rect(26px, 9999px, 60px, 0); }
+                45% { clip: rect(25px, 9999px, 66px, 0); }
+                50% { clip: rect(57px, 9999px, 98px, 0); }
+                55% { clip: rect(5px, 9999px, 46px, 0); }
+                60% { clip: rect(82px, 9999px, 31px, 0); }
+                65% { clip: rect(54px, 9999px, 27px, 0); }
+                70% { clip: rect(28px, 9999px, 99px, 0); }
+                75% { clip: rect(45px, 9999px, 69px, 0); }
+                80% { clip: rect(23px, 9999px, 85px, 0); }
+                85% { clip: rect(54px, 9999px, 84px, 0); }
+                90% { clip: rect(45px, 9999px, 47px, 0); }
+                95% { clip: rect(37px, 9999px, 20px, 0); }
+                100% { clip: rect(4px, 9999px, 91px, 0); }
+            }
+            .clock-hand {
+                transform-origin: bottom center;
+                position: absolute;
+                bottom: 50%;
+                left: 50%;
+            }
+            .digital-digit {
+                position: relative;
+                width: 60px;
+                height: 100px;
+                margin: 0 5px;
+            }
+        }
+    </style>
+    
+    <!-- 导入字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-cyber-black text-white min-h-screen overflow-x-hidden relative font-cyber grid-pattern">
+    <!-- 扫描线效果 -->
+    <div class="scanline"></div>
+    
+    <!-- 装饰性网格和元素 -->
+    <div class="absolute inset-0 pointer-events-none opacity-20">
+        <div class="absolute top-1/4 left-0 w-full h-px bg-cyber-blue"></div>
+        <div class="absolute top-2/4 left-0 w-full h-px bg-cyber-blue"></div>
+        <div class="absolute top-3/4 left-0 w-full h-px bg-cyber-blue"></div>
+        <div class="absolute top-0 left-1/4 w-px h-full bg-cyber-blue"></div>
+        <div class="absolute top-0 left-2/4 w-px h-full bg-cyber-blue"></div>
+        <div class="absolute top-0 left-3/4 w-px h-full bg-cyber-blue"></div>
+    </div>
+    
+    <!-- 页面标题 -->
+    <header class="relative z-10 pt-12 pb-8 text-center">
+        <h1 class="text-[clamp(2rem,5vw,4rem)] font-bold glitch" data-text="CYBER CLOCK">CYBER CLOCK</h1>
+        <p class="text-cyber-blue text-shadow-neon-blue mt-4 text-[clamp(1rem,2vw,1.25rem)]">NEON TIMEKEEPING SYSTEM v2.4.1</p>
+    </header>
+    
+    <!-- 主内容区 -->
+    <main class="relative z-10 container mx-auto px-4 py-8 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
+        
+        <!-- 模拟时钟 -->
+        <div class="relative">
+            <!-- 时钟外框 -->
+            <div class="w-[clamp(280px,80vw,500px)] h-[clamp(280px,80vw,500px)] rounded-full border-4 border-cyber-blue glow-neon-blue relative flex items-center justify-center">
+                
+                <!-- 时钟内圈 -->
+                <div class="w-[90%] h-[90%] rounded-full bg-cyber-black/80 border-2 border-cyber-purple relative overflow-hidden">
+                    
+                    <!-- 故障效果线条 -->
+                    <div class="absolute top-0 left-0 w-full h-px bg-cyber-pink opacity-70 animate-pulse"></div>
+                    <div class="absolute top-1/2 left-0 w-full h-px bg-cyber-pink opacity-70 animate-pulse" style="animation-delay: 0.5s"></div>
+                    
+                    <!-- 时钟刻度和数字 -->
+                    <div class="absolute inset-0">
+                        <!-- 生成所有刻度和数字 -->
+                        <script>
+                            // 生成12个小时数字和60个刻度
+                            const clockRadius = 45; // 百分比
+                            const hourNumbers = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+                            
+                            // 先创建所有分钟刻度
+                            document.write(Array.from({length: 60}, (_, i) => {
+                                const angle = i * 6; // 每分钟6度
+                                const isHourMark = i % 5 === 0;
+                                const length = isHourMark ? 6 : 3;
+                                const width = isHourMark ? 2 : 1;
+                                const color = isHourMark ? 'bg-cyber-pink' : 'bg-cyber-blue/50';
+                                
+                                return `<div class="absolute ${color} w-${width} h-${length}" 
+                                        style="top: ${100 - clockRadius}%; left: 50%; 
+                                                transform-origin: 0 calc(${clockRadius}vh); 
+                                                transform: translateX(-50%) rotate(${angle}deg)"></div>`;
+                            }).join(''));
+                            
+                            // 再创建小时数字（确保在刻度上方）
+                            document.write(hourNumbers.map((num, i) => {
+                                const angle = i * 30; // 每小时30度
+                                const radians = angle * Math.PI / 180;
+                                // 计算数字位置（稍微向内一点，不在最外圈）
+                                const adjustedRadius = clockRadius - 8;
+                                const x = 50 + adjustedRadius * Math.sin(radians);
+                                const y = 50 - adjustedRadius * Math.cos(radians);
+                                
+                                return `<div class="absolute text-cyber-blue text-shadow-neon-blue font-bold text-sm md:text-base" 
+                                        style="left: ${x}%; top: ${y}%; transform: translate(-50%, -50%)">
+                                        ${num}
+                                    </div>`;
+                            }).join(''));
+                        </script>
+                    </div>
+                    
+                    <!-- 时针 -->
+                    <div id="hour-hand" class="clock-hand w-4 h-[35%] bg-cyber-purple rounded-full -translate-x-1/2 glow-neon-purple"></div>
+                    
+                    <!-- 分针 -->
+                    <div id="minute-hand" class="clock-hand w-3 h-[45%] bg-cyber-blue rounded-full -translate-x-1/2 glow-neon-blue"></div>
+                    
+                    <!-- 秒针 -->
+                    <div id="second-hand" class="clock-hand w-2 h-[50%] bg-cyber-pink rounded-full -translate-x-1/2 glow-neon-pink"></div>
+                    
+                    <!-- 中心圆点 -->
+                    <div class="absolute top-1/2 left-1/2 w-6 h-6 rounded-full bg-cyber-black border-2 border-cyber-pink -translate-x-1/2 -translate-y-1/2 glow-neon-pink"></div>
+                </div>
+            </div>
+            
+            <!-- 装饰性文字 -->
+            <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 text-cyber-yellow/70 text-sm tracking-widest">
+                <span class="animate-pulse">SYSTEM ONLINE</span>
+            </div>
+        </div>
+        
+        <!-- 电子时钟 (24小时制) -->
+        <div class="flex flex-col items-center gap-8">
+            <div class="text-center">
+                <h2 class="text-cyber-purple text-shadow-neon-purple text-[clamp(1.5rem,3vw,2rem)] mb-2">DIGITAL DISPLAY</h2>
+                <p class="text-cyber-blue/70 text-sm">24-HOUR MILITARY TIME</p>
+            </div>
+            
+            <!-- 电子时钟显示 -->
+            <div class="bg-cyber-black/60 border-2 border-cyber-pink p-6 rounded-lg glow-neon-pink w-full max-w-md">
+                <div class="flex items-center justify-center gap-2 lg:gap-4">
+                    <!-- 小时十位 -->
+                    <div id="hour-tens" class="text-[clamp(2rem,6vw,4rem)] font-bold text-cyber-blue text-shadow-neon-blue">0</div>
+                    
+                    <!-- 小时个位 -->
+                    <div id="hour-ones" class="text-[clamp(2rem,6vw,4rem)] font-bold text-cyber-blue text-shadow-neon-blue">0</div>
+                    
+                    <!-- 冒号 -->
+                    <div class="text-[clamp(2rem,6vw,4rem)] text-cyber-pink text-shadow-neon-pink animate-pulse">:</div>
+                    
+                    <!-- 分钟十位 -->
+                    <div id="minute-tens" class="text-[clamp(2rem,6vw,4rem)] font-bold text-cyber-blue text-shadow-neon-blue">0</div>
+                    
+                    <!-- 分钟个位 -->
+                    <div id="minute-ones" class="text-[clamp(2rem,6vw,4rem)] font-bold text-cyber-blue text-shadow-neon-blue">0</div>
+                    
+                    <!-- 冒号 -->
+                    <div class="text-[clamp(2rem,6vw,4rem)] text-cyber-pink text-shadow-neon-pink animate-pulse">:</div>
+                    
+                    <!-- 秒钟十位 -->
+                    <div id="second-tens" class="text-[clamp(2rem,6vw,4rem)] font-bold text-cyber-purple text-shadow-neon-purple">0</div>
+                    
+                    <!-- 秒钟个位 -->
+                    <div id="second-ones" class="text-[clamp(2rem,6vw,4rem)] font-bold text-cyber-purple text-shadow-neon-purple">0</div>
+                </div>
+                
+                <!-- 日期显示 -->
+                <div id="date-display" class="mt-4 text-center text-cyber-yellow/80 text-[clamp(0.8rem,2vw,1rem)] tracking-wider">
+                    MONDAY, 01 JAN 2077
+                </div>
+            </div>
+            
+            <!-- 状态指示器 -->
+            <div class="flex gap-4 items-center text-sm text-cyber-yellow/70">
+                <div class="flex items-center gap-1">
+                    <span class="w-2 h-2 bg-cyber-pink rounded-full animate-pulse"></span>
+                    <span>SYNCED</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="w-2 h-2 bg-cyber-blue rounded-full animate-pulse" style="animation-delay: 0.3s"></span>
+                    <span>ACTIVE</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <span class="w-2 h-2 bg-cyber-purple rounded-full animate-pulse" style="animation-delay: 0.6s"></span>
+                    <span>SECURE</span>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 页脚 -->
+    <footer class="relative z-10 mt-16 pb-8 text-center text-cyber-blue/50 text-sm">
+        <p>CyberClock@Halimao</p>
+    </footer>
+    
+    <!-- 时钟功能JavaScript -->
+    <script>
+        // 更新时钟指针位置
+        function updateClock() {
+            const now = new Date();
+            
+            // 计算角度 (秒针6度/秒，分针6度/分+0.1度/秒，时针30度/时+0.5度/分)
+            const seconds = now.getSeconds();
+            const secondsAngle = seconds * 6;
+            
+            const minutes = now.getMinutes();
+            const minutesAngle = minutes * 6 + seconds * 0.1;
+            
+            const hours = now.getHours() % 12; // 12小时制用于指针
+            const hoursAngle = hours * 30 + minutes * 0.5;
+            
+            // 更新指针样式
+            document.getElementById('second-hand').style.transform = `translateX(-50%) rotate(${secondsAngle}deg)`;
+            document.getElementById('minute-hand').style.transform = `translateX(-50%) rotate(${minutesAngle}deg)`;
+            document.getElementById('hour-hand').style.transform = `translateX(-50%) rotate(${hoursAngle}deg)`;
+            
+            // 更新电子时钟
+            const militaryHours = now.getHours(); // 24小时制用于数字显示
+            const displayHours = militaryHours.toString().padStart(2, '0');
+            const displayMinutes = minutes.toString().padStart(2, '0');
+            const displaySeconds = seconds.toString().padStart(2, '0');
+            
+            document.getElementById('hour-tens').textContent = displayHours[0];
+            document.getElementById('hour-ones').textContent = displayHours[1];
+            document.getElementById('minute-tens').textContent = displayMinutes[0];
+            document.getElementById('minute-ones').textContent = displayMinutes[1];
+            document.getElementById('second-tens').textContent = displaySeconds[0];
+            document.getElementById('second-ones').textContent = displaySeconds[1];
+            
+            // 更新日期
+            const options = { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' };
+            document.getElementById('date-display').textContent = now.toLocaleDateString('en-US', options).toUpperCase();
+        }
+        
+        // 初始化时钟并每秒更新
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // 添加随机故障效果
+        function addRandomGlitch() {
+            if (Math.random() < 0.05) { // 5%的概率触发故障
+                const elements = document.querySelectorAll('.glitch, #hour-tens, #hour-ones, #minute-tens, #minute-ones, #second-tens, #second-ones');
+                const randomElement = elements[Math.floor(Math.random() * elements.length)];
+                
+                randomElement.style.animation = 'none';
+                randomElement.offsetHeight; // 触发重绘
+                randomElement.style.animation = null;
+            }
+        }
+        
+        // 定期检查是否添加故障效果
+        setInterval(addRandomGlitch, 500);
+    </script>
+</body>
+</html>
+    
